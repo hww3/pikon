@@ -74,6 +74,24 @@ void close_remote_connection(mixed id)
   }
 }
 
+string list_consoles()
+{
+  int|array res=send_command_get_reply("LISTCONSOLES");
+  if(intp(res) && res/100 !=2) return "Server unable to complete request";
+  if(arrayp(res))   
+    return res[1];
+}
+
+string show_log(string c)
+{
+  if(!c || c=="")
+    return "console name required.";
+  int|array res=send_command_get_reply("SHOWLOG " + c);
+  if(intp(res) && res/100 !=2) return "Server unable to complete request";
+  if(arrayp(res))   
+    return res[1];
+}
+
 int is_connected()
 {
   if(conn && (send_command("VERSION")/100)==2)
@@ -158,6 +176,23 @@ int send_command(string cmd)
   return read_response();
 }
 
+array|int send_command_get_reply(string cmd)
+{
+  if(!conn) return 405; // no connection.
+
+  string res, desc;
+  int code,r;
+  conn->set_blocking();
+  if(catch(r=conn->write(cmd + "\r\n"))) //has connection closed on us?
+  {
+    conn=0;
+    last_response="Connection to Pikon server lost.";
+    return 402;
+  }
+  if(r<sizeof(cmd)+2) werror("didn't write whole command...\n");
+  return read_response_plus_data();
+}
+
 int read_response()
 {
   int code;
@@ -187,6 +222,44 @@ int read_response()
   }
   last_response=desc;
   return code;
+}
+
+array|int read_response_plus_data()
+{
+  int code;
+  string res, desc, data;
+
+  conn->set_blocking();
+  if(catch(res=conn->read(1024, 1)))
+  {
+    last_response="Connection to Pikon server lost.";
+    return 402;
+  }
+  if(!res)
+  {
+    conn=0;
+    last_response="Connection to Pikon server lost.";
+    return 402;
+  }
+
+  while(sscanf(res, "%d %s\r\n%s\r\n.\r\n%d %s\r\n", code, desc, data)!=3)
+  {
+
+    if(catch(res+=conn->read(1024, 1)))
+    {
+      last_response="Connection to Pikon server lost.";
+      return 402;
+    }
+
+  }
+
+  conn->set_nonblocking();
+    conn->set_read_callback(read_remote_connection);
+    conn->set_write_callback(write_remote_connection);
+    conn->set_close_callback(close_remote_connection);
+
+  last_response=desc;
+  return ({code, data});
 }
 
 void monitor_send_data(mixed data)
@@ -251,6 +324,8 @@ void connect_send_data(mixed data)
   }
   else
   {
+    if(data=="\n")
+      data="\r";
     if(catch(conn->write(data)))
     {
       monitor_cb("\n");
