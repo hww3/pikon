@@ -13,9 +13,14 @@
   "logout        De-authenticate a previously logged in user\n"\
   "monitor       Open a read-only session to a console\n"\
   "connect       Open a read-write console session\n"\
+  "listconsoles  List available consoles\n"\
+  "showlog       Display today's logfile for a console\n"\
+  "connect       Open a read-write console session\n"\
   "quit          End the Pikon client session\n"
 
-#define CONNECT_MENU_OPTIONS "\n"\
+#define CONNECT_MENU_OPTIONS "\n\n"\
+  "Connect Options Menu\n"\
+  "Press one of the following keys:\n\n"\
   "q          End this CONNECT session\n"\
   "x          Close this menu and return to session\n"\
   "b          Send BREAK\n"

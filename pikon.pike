@@ -22,12 +22,29 @@ int port;
 int in_connect_mode=0;
 int authenticated=0;
 
+string configfile="";
+
 mixed history;
 mapping prefs=([]);
 
 
 int main(int argc, array argv)
 {
+
+  array args=Getopt.find_all_options(argv, ({
+      ({"pikonhome", Getopt.HAS_ARG, ({"-ph", "--pikonhome"}) }),
+      ({"configfile", Getopt.HAS_ARG, ({"-f", "--configfile"}) })
+    }) );
+
+  foreach(args, array arg)
+  {
+    if(arg[0]=="configfile")
+      configfile=arg[1];
+    else if(arg[0]=="pikonhome" && configfile=="")
+      configfile=arg[1] + "/pikon.conf";
+  }
+
+
   load_preferences();
   in=Stdio.stdin;
   out=Stdio.stdout;
@@ -51,7 +68,9 @@ int main(int argc, array argv)
 
 void load_preferences()
 {
-   string f=Stdio.read_file("pikon.conf");
+   string f=Stdio.read_file(configfile);
+   if(!f)
+     error("unable to read configuration file " + configfile + "\n");
    mapping p=.Config.read(f);
    prefs=p->client||([]);
 }
@@ -132,6 +151,19 @@ void newline(mixed data)
        break;
      case "help":
        do_help();
+       break;
+     case "listconsoles":
+       do_listconsoles();
+       break;
+
+     case "showlog":
+       pause_history();
+       if(sizeof(c)==1)
+         do_showlog();
+       else
+         do_showlog(c[1..]*" ");
+       resume_history();
+       cmd->redisplay();
        break;
 
      default:
@@ -251,6 +283,50 @@ void do_monitor(void|string arg)
 	+ conn->last_response);
     }
   }  
+}
+
+void do_listconsoles()
+{
+  if(!connected())
+    cmd->message("You must be connected to a Pikon server first.");
+
+  else
+    cmd->message(conn->list_consoles());
+}
+
+void do_showlog(void|string arg)
+{
+  if(!connected())
+    cmd->message("You must be connected to a Pikon server first.");
+  else
+  {
+    string hst,conname;
+    if(arg)
+    {
+      if(sscanf(arg, "%s", hst)!=1)
+      {
+        cmd->message("Usage: showlog [console]");
+        return;
+      }
+      else
+      {
+         conname=hst;
+      }
+    }
+    else  // let's gather console information.
+    {
+      cmd->set_prompt("");
+      string hst;
+      do 
+      {
+        hst=cmd->read("console: ");
+      }
+      while(!hst);
+      conname=hst;
+    }
+
+    cmd->message(replace(conn->show_log(conname), "\r\n", "\n"));
+   }
 }
 
 void do_connect(void|string arg)
@@ -473,6 +549,7 @@ void monitor_mode_read_from_client(int id, mixed data)
 
 void connect_mode_read_from_client(int id, mixed data)
 {
+  werror("data: " + sprintf("%O", data) + "\n");
   if(data)
   {
     conn->connect_send_data(data);
