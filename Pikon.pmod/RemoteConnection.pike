@@ -104,7 +104,33 @@ void parse_command(string cmd)
      case "version":
      send_response(210, "Pikon v" + this->main_program->version);
      break;
-     
+
+     case "listconsoles":
+     send_response(212, "Available consoles follow");
+     list_consoles();
+
+     case "showlog":
+
+     c=cmd/" ";
+     if(sizeof(c)==2)
+     {
+       string con=lower_case(c[1]);
+       if(this->main_program->consoles && !this->main_program->consoles[con])
+       {
+         send_response(325, "non-existant console");
+       }
+       else if(!has_permission(con))
+       {
+         send_response(326, "insufficient permissions");
+       } 
+       else
+       {
+         send_response(212, "Most recent log follows");
+         show_log(con);
+       }
+     }
+     break;
+
      case "endmonitor":
      if(!in_command_mode)
      {
@@ -233,7 +259,6 @@ void send_response(int code, string response, void|string data)
   conn->write(sprintf("%d %s\r\n", code, response));
   if(data)
     write_body(data);
-
   return;
 }
 
@@ -302,4 +327,26 @@ int has_write_permission(string con)
 void send_data_to_remote(mixed data)
 {
   conn->write(data);
+}
+
+void show_log(string c)
+{
+  string d="";
+  if(!this->main_program->consoles[c])
+    d="unable to find console " + c + ".";
+  else
+  {
+     d=this->main_program->consoles[c]->get_log();
+  }
+  conn->write(d + "\r\n.\r\n");
+}
+
+void list_consoles()
+{
+  string d="";
+  foreach(indices(this->main_program->consoles), string con)
+    d+=" " + sprintf("%O", 
+this->main_program->consoles[con]->console_name) +"\n";
+
+  conn->write(d + "\r\n.\r\n");
 }
