@@ -1,0 +1,3 @@
+#!/bin/sh
+
+@PIKE@ -M@prefix@/pikon/ -I@prefix@/pikon/ @prefix@/pikon/pikond.pike

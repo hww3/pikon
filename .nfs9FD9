@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/usr/local/pike/7.4.10/bin/pike -M/usr/local/pikon/ -I/usr/local/pikon/ /usr/local/pikon/pikon.pike

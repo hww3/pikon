@@ -1,0 +1,26 @@
+# Process this file with autoconf to produce a configure script.
+AC_INIT(Pikon, 1.0, hww3@riverweb.com)
+AC_CONFIG_SRCDIR([pikon.h])
+
+# Checks for programs.
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+
+REQ_PIKE_MAJOR=7 
+REQ_PIKE_MINOR=4
+REQ_PIKE_BUILD=1
+
+AP_CHECK_PIKE(7.4.1)
+
+# Checks for header files.
+
+# Checks for library functions.
+
+AC_CONFIG_FILES([ Makefile 
+	pikon
+	pikond
+                 ])
+AC_OUTPUT
