@@ -1,4 +1,4 @@
-dnl $Id: aclocal.m4,v 1.1.1.1 2003-01-26 16:27:13 hww3 Exp $
+dnl $Id: aclocal.m4,v 1.1.1.2 2003-08-12 20:29:25 hww3 Exp $
 AC_DEFUN([AP_CHECK_PIKE],
 [
 ### Pike Detection ###
@@ -130,7 +130,11 @@ if test "$PIKE" != ""; then
   PIKE_1=`dirname ${PIKE}`
   PIKE_INCLUDE_DIRS=""
 
-  PIKE_C_INCLUDE_DIRS="${PIKE_C_INCLUDE_DIRS} `dirname ${PIKE_1}`/include/pike /usr/include/`basename ${PIKE}`"
+  echo "PIKE_1 is ${PIKE_1}"
+
+  PIKE_C_INCLUDE_DIRS="${PIKE_C_INCLUDE_DIRS} `dirname ${PIKE_1}`/${PIKE_VERSION}/include/pike `dirname ${PIKE_1}`/include/pike /usr/include/`basename ${PIKE}`"
+
+  echo "PIKE_C_INCLUDE_DIRS is ${PIKE_C_INCLUDE_DIRS}"
   for PIKE_C_INCLUDE in ${PIKE_C_INCLUDE_DIRS}
   do
     AC_MSG_CHECKING(for C includes in ${PIKE_C_INCLUDE})
