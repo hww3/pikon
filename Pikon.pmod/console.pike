@@ -148,6 +148,7 @@ void write_logfile(string data, int|void logonly)
 
 void low_write_logfile(string data, int|void logonly)
 {
+    data=replace(data, ({"\r\n", "\r"}), ({"\n","\n"}));
     array d=data/"\n";
     int now=time();
 
@@ -272,5 +273,17 @@ void write_endstamp()
      call_out(write_timestamp, 3600);
 }
 
+string get_log()
+{
+  int now=time();
+  mixed t=localtime(now);
+  string logfile_name=params->name + "_" +
+    sprintf("%4d%02d%02d", (1900+t->year), (t->mon+1),t->mday) + ".log";
+   
+  mixed f=file_stat(params->logdir + "/" + logfile_name);
+  if(!f) return "unable to read logfile.";  
+
+  return Stdio.read_file(params->logdir + "/" + logfile_name);
+}
 
 
