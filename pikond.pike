@@ -11,19 +11,28 @@ constant version="0.1.0";
 mapping prefs=([]);
 mapping consoles=([]);
 object listener;
+string configfile="pikon.conf";
 
 int main(int argc, array argv)
 {
   int daemon_mode=0;
 
-  array args=Getopt.find_all_options(argv, ({ ({"daemon", Getopt.NO_ARG, 
-    ({"-d", "--daemon"})}) }));
+  array args=Getopt.find_all_options(argv, ({ 
+      ({"pikonhome", Getopt.HAS_ARG, ({"-ph", "--pikonhome"}) }),
+      ({"daemon", Getopt.NO_ARG, ({"-d", "--daemon"}) }),
+      ({"configfile", Getopt.HAS_ARG, ({"-f", "--configfile"}) }) 
+    }) );
 
   foreach(args, array arg)
   {
     if(arg[0]=="daemon")
       daemon_mode=1;
+    else if(arg[0]=="pikonhome" && configfile=="")
+      configfile=arg[1] + "/pikon.conf";
+    else if(arg[0]=="configfile")
+      configfile=arg[1];
   }
+
   if(daemon_mode)
   {
     catch(System.setsid());
@@ -37,7 +46,8 @@ int main(int argc, array argv)
 
 void load_preferences()
 {
-   string f=Stdio.read_file("pikon.conf");
+   string f=Stdio.read_file(configfile);
+   if(!f) error("unable to read config file " + configfile + "\n");
    mapping p=.Config.read(f);
    prefs=p;
 }
